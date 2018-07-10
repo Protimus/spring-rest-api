@@ -2,13 +2,12 @@ package com.servidor.cms;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
@@ -27,19 +26,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .logout()
                 .permitAll();
     }
+    
+    
+    private static final String BCRYPT_PASSWORD = "$2a$09$H2DNmCGbBgwqmmOnYwR1e.kHrhKU5OvzkBrn0s7dQ9.X0vVMvDZze";
 
-    @SuppressWarnings("deprecation")
-	@Bean
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
     @Override
-    public UserDetailsService userDetailsService() {
-    	UserDetails user = User.withDefaultPasswordEncoder()
-    		     .username("user")
-    		     .password("password")
-    		     .roles("USER")
-    		     .build();
-    		 // outputs {bcrypt}$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG
-    		 System.out.println(user.getPassword());
-    		 
-        return new InMemoryUserDetailsManager(user);
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication()
+            .passwordEncoder(passwordEncoder())
+            .withUser("user").password(BCRYPT_PASSWORD).roles("USER");
     }
 }
